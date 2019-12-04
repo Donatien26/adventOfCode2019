@@ -2,135 +2,90 @@ package days;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import utils.Coordinate;
 import utils.utils;
 
-/**
- * day2
- */
 public class Day2 {
-
-    public static Integer part1(String filePath) {
-        List<Point> listPoint = new ArrayList<>();
-        Point depart = new Point(0, 0);
-        listPoint.add(depart);
-
-        List<String> input = utils.readFile(filePath);
-
-        for (String string : input) {
-            List<String> instructions = Arrays.asList(string.split(","));
-            Point oldPoint = depart;
-            Point point;
-
-            for (String instruction : instructions) {
-                int move = Integer.valueOf(instruction.substring(1));
-                String direction = instruction.substring(0, 1);
-                if (direction.equals("U")) {
-                    point = new Point(oldPoint.getAbscisse(), oldPoint.getOrdonnee() + move);
-                    listPoint.add(point);
-                    oldPoint = point;
-
-                } else if (direction.equals("R")) {
-
-                    point = new Point(oldPoint.getAbscisse() + move, oldPoint.getOrdonnee());
-                    listPoint.add(point);
-                    oldPoint = point;
-
-                } else if (direction.equals("L")) {
-                    point = new Point(oldPoint.getAbscisse() - move, oldPoint.getOrdonnee());
-                    listPoint.add(point);
-                    oldPoint = point;
-
-                } else {
-                    point = new Point(oldPoint.getAbscisse(), oldPoint.getOrdonnee() - move);
-                    listPoint.add(point);
-                    oldPoint = point;
-
-                }
-            }
-        }
-        List<Integer> toto = construireDoublonsliste(listPoint).stream().map(point2 -> point2.DistanceManahatan())
-                .collect(Collectors.toList());
-        return Collections.min(toto);
-    }
-
-    public static List<Point> construireDoublonsliste(List<Point> list) {
-        List<Point> listeDouble = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
-            for (int j = 0; j < list.size(); j++) {
-                if (i != j && list.get(i).equals(list.get(j))) {
-                    listeDouble.add(list.get(i));
-                }
-            }
-        }
-        return listeDouble;
-    }
-
-    public static Point transformerEnVecteur(Point pointA, Point pointB) {
-        return new Point(pointB.getAbscisse() - pointA.getAbscisse(), pointB.getOrdonnee() - pointA.getOrdonnee());
-    }
-
-    public int produitVectoriel(Point vecteurA, Point vecteurB) {
-        return vecteurA.getOrdonnee()*vecteurB.getAbscisse()-vecteurA.getAbscisse()*vecteurB.getOrdonnee();
-    }
+    public static final SmartCoordinate startingCoordinate = new SmartCoordinate(0, 0, 0);
 
     public static void main(String[] args) {
-        System.out.println(part1("day2/test/input-day-3-test.txt"));
+        System.out.println("answer A: " + part1("day2/input-day-2.txt"));
+        System.out.println("answer B: " + part2("day2/input-day-2.txt"));
     }
 
-    static class Point {
+    public static int part1(String filePath) {
+        List<String> input = utils.readFile(filePath);
+        List<SmartCoordinate> coordsFromRoute1 = getCoordsFromRoute(input.get(0));
+        List<SmartCoordinate> coordsFromRoute2 = getCoordsFromRoute(input.get(1));
 
-        int abscisse;
-        int ordonnee;
+        coordsFromRoute1.remove(startingCoordinate);
+        return coordsFromRoute1.stream()
+                .filter(coordinate -> coordsFromRoute2.contains(coordinate))
+                .mapToInt(coordinate -> coordinate.getManhattanDistance(startingCoordinate))
+                .min()
+                .getAsInt();
+    }
 
-        public Point(int x, int y) {
-            abscisse = x;
-            ordonnee = y;
-        }
+    public static List<SmartCoordinate> getCoordsFromRoute(String route) {
+        List<SmartCoordinate> coordinateList = new ArrayList<>();
+        // add starting position
+        coordinateList.add(startingCoordinate);
 
-        /**
-         * @return the abscisse
-         */
-        public int getAbscisse() {
-            return abscisse;
-        }
+        Arrays.stream(route.split(",")).forEach(routePart -> addRouteLineToCoords(routePart, coordinateList));
+        return coordinateList;
+    }
 
-        /**
-         * @return the ordonnee
-         */
-        public int getOrdonnee() {
-            return ordonnee;
-        }
-
-        public int DistanceManahatan() {
-            return Math.abs(this.abscisse) + Math.abs(this.ordonnee);
-        }
-
-        /**
-         * @param abscisse the abscisse to set
-         */
-        public void setAbscisse(int abscisse) {
-            this.abscisse = abscisse;
-        }
-
-        /**
-         * @param ordonnee the ordonnee to set
-         */
-        public void setOrdonnee(int ordonnee) {
-            this.ordonnee = ordonnee;
-        }
-
-        public boolean equals(Point obj) {
-            return this.abscisse == obj.abscisse && this.ordonnee == obj.ordonnee;
-        }
-
-        @Override
-        public String toString() {
-            return "(" + this.abscisse + "," + this.ordonnee + ")";
+    public static void addRouteLineToCoords(String routePart, List<SmartCoordinate> coordinateList) {
+        // example routeparts: R1008 L339 U12 D965
+        int steps = Integer.parseInt(routePart.substring(1));
+        switch (routePart.substring(0, 1)) {
+            case "R": createLineFromLastCoordinate(steps, coordinateList, true); break;
+            case "L": createLineFromLastCoordinate(-steps, coordinateList, true); break;
+            case "U": createLineFromLastCoordinate(steps, coordinateList, false); break;
+            case "D": createLineFromLastCoordinate(-steps, coordinateList, false); break;
+            default:
+                throw new UnsupportedOperationException("This isn't a direction." + routePart.substring(0, 1));
         }
     }
 
+    public static void createLineFromLastCoordinate(int steps, List<SmartCoordinate> coordinateList, boolean horizontal) {
+        int modifier = steps < 0 ? -1 : 1;
+        SmartCoordinate startingCoordinate = coordinateList.get(coordinateList.size() - 1);
+
+        for (int i = 1; i <= steps * modifier; i++) {
+            int x = horizontal ? startingCoordinate.x + (i * modifier) : startingCoordinate.x;
+            int y = horizontal ? startingCoordinate.y : startingCoordinate.y + (i * modifier);
+            coordinateList.add(new SmartCoordinate(x, y, startingCoordinate.stepsAlongRoute + i));
+        }
+    }
+
+    public static int part2(String filePath) {
+        List<String> input = utils.readFile(filePath);
+        List<SmartCoordinate> coordsFromRoute1 = getCoordsFromRoute(input.get(0));
+        List<SmartCoordinate> coordsFromRoute2 = getCoordsFromRoute(input.get(1));
+
+        coordsFromRoute1.remove(startingCoordinate);
+        return coordsFromRoute1.stream()
+                .filter(coordinate -> coordsFromRoute2.contains(coordinate))
+                .mapToInt(coordinate -> coordinate.getStepsAlongRoute() + coordsFromRoute2.get(coordsFromRoute2.indexOf(coordinate)).getStepsAlongRoute())
+                .min()
+                .getAsInt();
+    }
+
+    public static class SmartCoordinate extends Coordinate {
+        public int stepsAlongRoute;
+
+        public SmartCoordinate(int x, int y, int stepsAlongRoute) {
+            super(x, y);
+            this.stepsAlongRoute = stepsAlongRoute;
+        }
+
+        public int getStepsAlongRoute() {
+            return stepsAlongRoute;
+        }
+    }
 }
+
+
