@@ -43,24 +43,6 @@ public class Day4 implements Days {
         return false;
     }
 
-    public static boolean aUnDoubleUnique(int nombre) {
-        String nombreString = String.valueOf(nombre);
-        for (int i = 1; i < nombreString.length()-1; i++) {
-            if (Integer.valueOf(nombreString.charAt(i)) == Integer.valueOf(nombreString.charAt(i - 1))) {
-                if (i < nombreString.length() - 1) {
-                    if (Integer.valueOf(nombreString.charAt(i)) != Integer.valueOf(nombreString.charAt(i + 1))) {
-                        return true;
-                    }
-                } else {
-                    return true;
-                }
-            }
-
-        }
-        return false;
-
-    }
-
     public static boolean contientUnDouble(int nombre){
         String nombreString = String.valueOf(nombre);
         List<Integer> listOccurenceDeChaqueNombre = new ArrayList<>();
@@ -93,9 +75,7 @@ public class Day4 implements Days {
     }
 
     public static void main(String[] args) {
-
-
-        System.out.println(part2("day4/input-day-4.txt"));
+        System.out.println(part1("day4/input-day-4.txt"));
         System.out.println(part2("day4/input-day-4.txt").size());
     }
 }
