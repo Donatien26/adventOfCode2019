@@ -9,7 +9,7 @@ import utils.utils;
 /**
  * Day3
  */
-public class Day4 implements Days {
+public class Day4 {
     public static int part1(String PathFile) {
         String[] input = utils.readFile(PathFile).get(0).split("-");
         int debut = Integer.valueOf(input[0]);
